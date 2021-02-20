@@ -11,36 +11,26 @@ const Modal = {
     }
 }
 
+const Storage = {
+    get() {
+        return JSON.parse(localStorage.getItem("dev.finances:transactions")) || []
+    },
+
+    set(transactions) {
+        localStorage.setItem("dev.finances:transactions", JSON.stringify(transactions))
+    }
+}
+
 const Transaction = {
-    all: [
-        {
-            description: 'Luz',
-            amount: -50000,
-            date: '23/01/2021',
-        },
-        {  
-            description: 'Website',
-            amount: 500000,
-            date: '23/01/2021',
-        },
-        {  
-            description: 'Internet',
-            amount: -20000,
-            date: '23/01/2021',
-        },
-        {  
-            description: 'App',
-            amount: 200000,
-            date: '23/01/2021',
-        }
-    ],
+    all: Storage.get(),
+
     add(transaction) {
         Transaction.all.push(transaction)
 
         App.reload();
     },
 
-    remove(index){
+    remove(index) {
         Transaction.all.splice(index, 1)
 
         App.reload();
@@ -52,29 +42,29 @@ const Transaction = {
         //para cada transação,
         Transaction.all.forEach(transaction => {
             //se ela form maior que zero
-            if(transaction.amount > 0){
+            if (transaction.amount > 0) {
                 income += transaction.amount;
             }
             //somar a um a variavel e retornar a variavel
         })
-        
+
         return income;
     },
 
     expenses() {
         let expense = 0;
-        
+
         Transaction.all.forEach(transaction => {
-            if(transaction.amount < 0){
+            if (transaction.amount < 0) {
                 expense += transaction.amount;
             }
         })
-        
+
         return expense;
     },
 
     total() {
-       return Transaction.incomes() + Transaction.expenses();
+        return Transaction.incomes() + Transaction.expenses();
     }
 }
 
@@ -123,7 +113,7 @@ const DOM = {
 }
 
 const Utils = {
-    formatAmount(value){
+    formatAmount(value) {
         value = Number(value) * 100
 
         return value
@@ -136,14 +126,14 @@ const Utils = {
 
     formatCurrency(value) {
         const signal = Number(value) < 0 ? "-" : ""
-        
+
         value = String(value).replace(/\D/g, "")
 
         value = Number(value) / 100
 
         value = value.toLocaleString("pt-BR", {
             style: "currency",
-            currency:"BRL"
+            currency: "BRL"
         })
 
         return signal + value
@@ -165,29 +155,29 @@ const Form = {
 
     validateFields() {
         const { description, amount, date } = Form.getValues()
-        
-        if( description.trim() === "" || 
-            amount.trim() === "" || 
-            date.trim() === "") { 
-                throw new Error("Por favor, preencha todos os campos")
+
+        if (description.trim() === "" ||
+            amount.trim() === "" ||
+            date.trim() === "") {
+            throw new Error("Por favor, preencha todos os campos")
         }
     },
 
-    formatValues(){
+    formatValues() {
         let { description, amount, date } = Form.getValues()
 
         amount = Utils.formatAmount(amount)
 
         date = Utils.formatDate(date)
 
-        return{
+        return {
             description,
             amount,
             date
         }
     },
 
-    clearFields(){
+    clearFields() {
         Form.description.value = ""
         Form.amount.value = ""
         Form.date.value = ""
@@ -199,16 +189,16 @@ const Form = {
         try {
             //verificar se todas as informações foram preenchidas
             Form.validateFields()
-            
+
             //formatar os dados para salvar 
             const transaction = Form.formatValues()
-            
+
             //salvar 
             Transaction.add(transaction)
-            
+
             //apagar os dados do formulario
             Form.clearFields()
-            
+
             //modal feche
             Modal.close()
 
@@ -221,9 +211,10 @@ const Form = {
 const App = {
     init() {
         Transaction.all.forEach(DOM.addTransaction)
-        
+
         DOM.updateBalance()
-        
+
+        Storage.set(Transaction.all)
     },
     reload() {
         DOM.clearTransaction()
